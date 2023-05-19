@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,6 +58,8 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t spiTxData[3];
+uint8_t spiRxData[3];
 
 /* USER CODE END 0 */
 
@@ -67,6 +70,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+	char spi_buf[20];
 
   /* USER CODE END 1 */
 
@@ -93,6 +98,18 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  /* Tx Bytes */
+  // configuring to single ended channel 0
+  spiTxData[0] = 0x01;
+  spiTxData[1] = 0x00;
+  spiTxData[2] = 0x00;
+
+  //bringing CS! to high then back to low
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN8, GPIO_PIN_SET);
+  HAL_DELAY(10);
+
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,6 +117,21 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
+	//Reading data
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN8, GPIO_PIN_RESET);
+
+	// transmit 7 leading 0s and start bit
+	HAL_SPI_TransmitReceive(&hspi1, spiTxData[0], spiRxData[0], 8, 10);
+
+	// transmit SIGL, D0, D1, D2 for single-ended input 1
+	HAL_SPI_TransmitReceive(&hspi1, spiTxData[1], spiRxData[1], 8, 10);
+
+	// transmit 0s since tx is don't-care and store 8 LSBs in the second index
+	HAL_SPI_TransmitReceive(&hspi1, spiTxData[2], spiRxData[2], 8, 10);
+
+	// pull up chip select signal to stop reading
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN8, GPIO_PIN_SET);
 
     /* USER CODE BEGIN 3 */
   }
